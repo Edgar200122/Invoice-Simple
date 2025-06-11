@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -232,6 +234,16 @@ class InvoicePreviewViewBody extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+              if(invoice.imagePath != "" && invoice.imagePath.isNotEmpty)
+              Align(
+                alignment: Alignment.centerLeft,
+                child:Image.file(
+        File(invoice.imagePath),
+        width:MediaQuery.of(context).size.width * 0.3,
+      
+        fit: BoxFit.cover,
+      ) ,
               ),
               const SizedBox(height: 80),
             ],

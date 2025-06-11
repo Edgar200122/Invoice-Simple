@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:invoice_simple/core/functions/get_invoice_total.dart';
 import 'package:invoice_simple/features/settings/data/model/item_model.dart';
 
 class ItemsCubit extends Cubit<ItemsState> {
@@ -56,9 +57,7 @@ class ItemsState {
 
   // ✅ Total Amount Calculation inside State
   double get totalAmount {
-    return selectedItems.fold(
-      0.0,
-      (sum, item) => sum + ((item.unitPrice ?? 0) * (item.quantity ?? 1)),
-    );
+    final total = calculateInvoiceTotals(selectedItems);
+    return total.total;
   }
-}
+}    

@@ -28,12 +28,16 @@ class _SummarySectionState extends State<SummarySection> {
   late TextEditingController discountController;
   late TextEditingController taxController;
 
-  double get totalAmount {
-    final subtotal = double.tryParse(subtotalController.text.replaceAll(',', '.')) ?? 0;
-    final discount = double.tryParse(discountController.text.replaceAll(',', '.')) ?? 0;
-    final tax = double.tryParse(taxController.text.replaceAll(',', '.')) ?? 0;
-    return subtotal - discount + tax;
-  }
+double get totalAmount {
+  final subtotal = double.tryParse(subtotalController.text.replaceAll(',', '.')) ?? 0;
+  final discount = double.tryParse(discountController.text.replaceAll(',', '.')) ?? 0;
+  final taxPercent = double.tryParse(taxController.text.replaceAll(',', '.')) ?? 0;
+
+  final afterDiscount = subtotal - discount;
+  final afterTax = afterDiscount * (1 - taxPercent / 100);
+
+  return afterTax;
+}
 
   @override
   void initState() {
@@ -91,7 +95,7 @@ _buildSummaryRow("Discount", discountController),
     thickness: 0.35,
       color:AppColors.blueGrey
     ),
-_buildSummaryRow("Tax", taxController),
+_buildSummaryRow("Tax %", taxController),
      
   Divider(  
    
@@ -166,8 +170,8 @@ Widget _buildSummaryRow(String title, TextEditingController controller) {
           controller: controller,
           keyboardType: TextInputType.numberWithOptions(decimal: true),
           textAlign: TextAlign.right,
-          decoration: const InputDecoration(
-            suffixText: ' \$',
+          decoration:  InputDecoration(
+            suffixText:title=="Tax %"?" %":' \$',
             border: InputBorder.none,
             isDense: true,
             contentPadding: EdgeInsets.zero,

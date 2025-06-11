@@ -33,43 +33,36 @@ class InvoiceCalculationResult {
     required this.total,
   });
 }
-InvoiceCalculationResult calculateInvoiceTotals(List<ItemModel> items) {
 
+InvoiceCalculationResult calculateInvoiceTotals(List<ItemModel> items) {
   double subtotal = 0;
   double totalDiscount = 0;
-  double totalTax = 0;
-   print("*********************************");
-  for (final item in items) {   
-      print("-------------------------------------");
-    print("price ${item.unitPrice}");
-print("quantity ${item.quantity}");  
-    print("discount ${item.discount}");
-    print("taxable ${item.taxableAmount}");
-    print("-------------------------------------");
-    final double price = item.unitPrice ?? 0; 
-    final int qty = item.quantity ?? 0;
+  double totalTaxableDeduction = 0;
 
+  for (final item in items) {
+    final double price = item.unitPrice ?? 0;
+    final int qty = item.quantity ?? 0;
     final double amountBeforeDiscount = price * qty;
 
-    final double discountPercent = item.discountActive ? (item.discount ?? 0) : 0;
-    final double discountAmount = amountBeforeDiscount * (discountPercent / 100);
-
+    final double discountAmount = item.discountActive ? (item.discount ?? 0) : 0;
     final double amountAfterDiscount = amountBeforeDiscount - discountAmount;
 
-    final double taxPercent = item.taxable ? (item.taxableAmount ?? 0) : 0;
-    final double itemTax = amountAfterDiscount * (taxPercent / 100);
+    final double taxablePercent = item.taxable ? (item.taxableAmount ?? 0) : 0;
+    final double taxableDeduction = amountAfterDiscount * (taxablePercent / 100);
 
     subtotal += amountBeforeDiscount;
     totalDiscount += discountAmount;
-    totalTax += itemTax;
+    totalTaxableDeduction += taxableDeduction;
   }
 
-  final double total = subtotal - totalDiscount + totalTax;
+  final double total = subtotal - totalDiscount - totalTaxableDeduction;
 
   return InvoiceCalculationResult(
     subtotal: subtotal,
     totalDiscount: totalDiscount,
-    totalTax: totalTax,
+    totalTax: totalTaxableDeduction,
     total: total,
   );
 }
+
+

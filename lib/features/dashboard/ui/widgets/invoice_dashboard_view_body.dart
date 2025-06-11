@@ -42,17 +42,29 @@ class InvoiceDashboardViewBody extends StatelessWidget {
             final inviceList = box.values.toList();
 
             // فلترة حسب الفلتر المختار
-            List<InvoiceModel> filteredList;
-            if (selectedFilter == 1) {
-              // Outstanding
-              filteredList = inviceList.where((invoice) => invoice.paymentMethod?.isEmpty ?? true).toList();
-            } else if (selectedFilter == 2) {
-              // Paid
-              filteredList = inviceList.where((invoice) => !(invoice.paymentMethod?.isEmpty ?? true)).toList();
-            } else {
-              // All
-              filteredList = inviceList;
-            }
+          List<InvoiceModel> filteredList;
+
+if (selectedFilter == 1) {
+  // Outstanding
+  filteredList = inviceList.where((invoice) {
+    final received = invoice.receivedPayment ?? 0;
+    final total = invoice.invoiceTotal ?? 0;
+    final isPaymentMethodEmpty = invoice.paymentMethod == null || invoice.paymentMethod!.isEmpty;
+  
+    return received < total && isPaymentMethodEmpty;
+  }).toList();
+} else if (selectedFilter == 2) {
+  // Paid
+  filteredList = inviceList.where((invoice) {
+    final received = invoice.receivedPayment ?? 0;
+    final total = invoice.invoiceTotal ?? 0;
+    return received >= total || invoice.paymentMethod?.isNotEmpty == true;
+  }).toList();
+} else {
+  // All
+  filteredList = inviceList;
+}
+
 
             // حساب إجمالي الدخل بناءً على الفلتر (لو عايز تجمع الكل regardless of filter رجع inviceList)
             double totalIncome = 0;

@@ -28,7 +28,6 @@ class BusinessView extends StatelessWidget {
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(bottom: 38.h, left: 24.w, right: 24.w),
         child: FilledTextButton(
-          color: AppColors.blue,
           text: "Add New",
           onPressed: () {
             context.push(AddNewBusinessView.routeName);

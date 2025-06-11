@@ -33,7 +33,17 @@ class _NewClientBottomSheetState extends State<NewClientBottomSheet> {
     clientAddressController.dispose();
     super.dispose();
   }
-
+@override
+void initState() {
+  super.initState();
+  billToController.addListener(_onFieldsChanged);
+  clientNameController.addListener(_onFieldsChanged);
+  clientPhoneController.addListener(_onFieldsChanged);
+  clientAddressController.addListener(_onFieldsChanged);
+}
+void _onFieldsChanged() {
+  setState(() {});
+}
   Future<void> importContact(BuildContext context) async {
     if (!await FlutterContacts.requestPermission()) {
       showRequiredFieldsDialog(context, "Please allow access to contacts");
@@ -61,10 +71,7 @@ class _NewClientBottomSheetState extends State<NewClientBottomSheet> {
   }
 
   Future<void> saveClient() async {
-    if (billToController.text.trim().isEmpty ||
-        clientNameController.text.trim().isEmpty ||
-        clientPhoneController.text.trim().isEmpty ||
-        clientAddressController.text.trim().isEmpty) {
+    if (isNotClientValid()) {
       showRequiredFieldsDialog(context, "Please fill all required fields");
       return;
     }
@@ -85,6 +92,13 @@ class _NewClientBottomSheetState extends State<NewClientBottomSheet> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text("Client saved successfully!")));
+  }
+
+  bool isNotClientValid() {
+    return billToController.text.trim().isEmpty ||
+      clientNameController.text.trim().isEmpty ||
+      clientPhoneController.text.trim().isEmpty ||
+      clientAddressController.text.trim().isEmpty;
   }
 
   @override
@@ -251,7 +265,9 @@ class _NewClientBottomSheetState extends State<NewClientBottomSheet> {
                 const SizedBox(height: 30),
 
                 FilledTextButton(
-                  color: AppColors.blue,
+                  color: isNotClientValid() 
+                      ? AppColors.blueGrey
+                      :null,
                   text: "Continue",
                   onPressed: () {
                     saveClient();

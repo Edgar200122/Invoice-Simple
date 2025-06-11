@@ -50,7 +50,11 @@ class _AddNewBusinessViewBodyState extends State<AddNewBusinessViewBody> {
             ),
             SizedBox(height: 32.h),
             BusinessInformationForm(
-              onChangedName: (val) { businessName = val ?? ""; },
+              onChangedName: (val) {
+             setState(() {
+               
+             });
+                 businessName = val ?? ""; },
               onChangedPhone: (val) { businessPhone = val ?? ""; },
               onChangedEmail: (val) { businessEmail = val ?? ""; },
               onChangedAddress: (val) { businessAddress = val ?? ""; },
@@ -81,8 +85,8 @@ class _AddNewBusinessViewBodyState extends State<AddNewBusinessViewBody> {
                   },
                 );
               },
-              color: AppColors.blue,
-              text: "Create a Signature",
+              color: signaturePath != null?null: AppColors.blue,
+              text:  signaturePath != null? "Create a Signature another": "Create a Signature",
             ),
 
         
@@ -90,6 +94,7 @@ class _AddNewBusinessViewBodyState extends State<AddNewBusinessViewBody> {
             SizedBox(height: 10.h),
 
             FilledTextButton(
+              color:businessName != ""? null: AppColors.blue,
               onPressed: () {
                 if (businessName != "") {
                   saveBusinessData(

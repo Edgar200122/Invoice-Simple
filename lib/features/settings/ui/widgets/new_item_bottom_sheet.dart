@@ -30,13 +30,20 @@ class _NewItemBottomSheetState extends State<NewItemBottomSheet> {
   final TextEditingController unitTypeController = TextEditingController(text: "Optional");
   final TextEditingController discountController = TextEditingController();
   final TextEditingController taxableController = TextEditingController();
+@override
+void initState() {
+  super.initState();
+ nameController.addListener(_onFieldsChanged);
 
+}  void _onFieldsChanged() {
+  setState(() {});
+}
   @override  
   void dispose() {
     nameController.dispose();
     detailsController.dispose();
     unitPriceController.dispose();
-    quantityController.dispose();
+    quantityController.dispose();  
     unitTypeController.dispose();
     discountController.dispose();
     taxableController.dispose();
@@ -388,7 +395,7 @@ if(discount != null){
                       decoration: InputDecoration(
                         isDense: true,
                         border: InputBorder.none,
-                        hintText: "0%",
+                        hintText: "0",
                         hintStyle: AppTextStyles.poFont20BlackWh400.copyWith(
                           fontSize: 12.sp,
                         ),
@@ -437,7 +444,10 @@ if(discount != null){
                     flex: 2,
                     child: TextField(
                       controller: taxableController,
+                   
+
                       decoration: InputDecoration(
+                        prefixText: "%",
                         isDense: true,
                         border: InputBorder.none,
                         hintText: "0%",
@@ -463,7 +473,7 @@ if(discount != null){
               ),
             ), SizedBox(height: 20.h),
                FilledTextButton(
-                  color: AppColors.blue,
+                  color:nameController.text.trim().isEmpty? AppColors.blue: null,
                   text: "Continue",
                   onPressed: () {
                   _saveItem();
