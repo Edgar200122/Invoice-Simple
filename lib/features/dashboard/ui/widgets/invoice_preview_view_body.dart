@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -14,8 +15,25 @@ class InvoicePreviewViewBody extends StatelessWidget {
   final InvoiceModel invoice;
   @override
   Widget build(BuildContext context) {
-         final invoiceCalculationResult= calculateInvoiceTotals(invoice.items);
-    final total =invoice.invoiceTotal?? invoiceCalculationResult.total;
+    final invoiceCalculationResult = calculateInvoiceTotals(invoice.items);
+    double subtotal =
+        invoice.invoiceSubtotal ?? invoiceCalculationResult.subtotal;
+    double totalDiscount =
+        invoice.invoiceDiscount ?? invoiceCalculationResult.totalDiscount;
+    double totalTax = invoice.invoiceTax ?? invoiceCalculationResult.totalTax;
+    final total = invoice.invoiceTotal ?? invoiceCalculationResult.total;
+    double amountPaid = 0;
+    if (invoice.paymentMethod == null || invoice.paymentMethod!.isEmpty) {
+      amountPaid = invoice.receivedPayment ?? 0.0;
+    } else {
+      amountPaid = total;
+    }
+
+    double balanceDue = total - amountPaid;
+    if (balanceDue < 0) {
+      balanceDue = 0.0;
+    }
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -26,230 +44,307 @@ class InvoicePreviewViewBody extends StatelessWidget {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 23),
           child: Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    Align(
+      alignment: Alignment.centerRight,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            (invoice.isEstimated ?? false) ? 'ESTIMATE' : 'INVOICE',
+            style: AppTextStyles.poFont20BlackWh700.copyWith(fontSize: 18.sp),
+          ),
+          SizedBox(height: 8),
+          Text(
+            DateFormat('d MMMM yyyy').format(invoice.issuedDate),
+            style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 15.sp),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'INVOICE NO ${invoice.invoiceNumber.toString()}',
+            style: AppTextStyles.poFont20BlackWh700.copyWith(fontSize: 15.sp),
+          ),
+          SizedBox(height: 8),
+        ],
+      ),
+    ),
+    SizedBox(height: 20),
+
+    Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // INVOICE TO (Client)
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      invoice.businessAccount.name,
-                      style: AppTextStyles.poFont20BlackWh600.copyWith(
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'INVOICE',
-                        style: AppTextStyles.poFont20BlackWh600.copyWith(
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        "#${invoice.invoiceNumber.toString().padLeft(3, '0')}",
-                        style: AppTextStyles.poFont20BlackWh400.copyWith(
-                          color: AppColors.blueGrey,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "Issued ${DateFormat('dd/MM/yyyy').format(invoice.issuedDate)}",
-                        style: AppTextStyles.poFont20BlackWh400.copyWith(
-                          color: AppColors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              // FROM - BILL TO
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    "FROM",
-                    style: AppTextStyles.poFont20BlackWh600.copyWith(
-                      fontSize: 14,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    "BILL TO",
-                    style: AppTextStyles.poFont20BlackWh600.copyWith(
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    invoice.client.clientName,
-                    style: AppTextStyles.poFont20BlackWh600.copyWith(
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // From name (business account name)
               Text(
-                invoice.businessAccount.name,
-                style: AppTextStyles.poFont20BlackWh600.copyWith(fontSize: 12),
+                'INVOICE TO:',
+                style: AppTextStyles.poFont20BlackWh700.copyWith(fontSize: 15.sp),
               ),
-              const SizedBox(height: 8),
-              // Table header row
-              InvoiceTableRow(
-                backgroundColor: AppColors.extraLightGrey,
-                height: 44,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        "Name",
-                        style: AppTextStyles.poFont20BlackWh600.copyWith(
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    "QTY",
-                    style: AppTextStyles.poFont20BlackWh600.copyWith(
-                      fontSize: 10,
-                    ),
-                  ),
-                  Text(
-                    "Price, ${invoice.currency}",
-                    style: AppTextStyles.poFont20BlackWh600.copyWith(
-                      fontSize: 10,
-                    ),
-                  ),
-                  Text(
-                    "Amount, ${invoice.currency}",
-                    style: AppTextStyles.poFont20BlackWh600.copyWith(
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
+              SizedBox(height: 2),
+              Text(
+                invoice.client.clientName,
+                style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 12.sp),
               ),
-              Column(
-                children:
-                    invoice.items.map((item) {
-                      final qty = item.quantity ?? 0;
-                      final price = item.unitPrice ?? 0.0;
-                      final amount = qty * price;
-
-                      return InvoiceTableRow(
-                        height: 44,
-                        showBottomBorder: true,
-                        children: [
-                          // اسم العنصر
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: Text(
-                              item.name ?? '',
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.poFont20BlackWh400.copyWith(
-                                fontSize: 10,
-                              ),
-                            ),
-                          ),
-                          // الكمية
-                          Text(
-                            qty.toString(),
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.poFont20BlackWh400.copyWith(
-                              fontSize: 10,
-                            ),
-                          ),
-                          // السعر
-                          Text(
-                            price.toStringAsFixed(2),
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.poFont20BlackWh400.copyWith(
-                              fontSize: 10,
-                            ),
-                          ),
-                          // المجموع = كمية * سعر
-                          Text(
-                            amount.toStringAsFixed(2),
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.poFont20BlackWh400.copyWith(
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
+              Text(
+                invoice.client.billTo,
+                style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 12.sp),
               ),
-
-              // Total Row
-              Row(
-                children: [
-                  Expanded(
-                    flex: 6,
-                    child: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 8,
-                      ),
-                      child: Text(
-                        "Total",
-                        style: AppTextStyles.poFont20BlackWh600.copyWith(
-                          fontSize: 10.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Container(
-                      alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-
-                        borderRadius: BorderRadius.only(
-                          bottomRight: Radius.circular(2),
-                        ),
-                      ),
-                      child: Text(
-                        total.toStringAsFixed(2),
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.poFont20BlackWh600.copyWith(
-                          fontSize: 10.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              Text(
+                'Phone: ${invoice.client.clientPhone}',
+                style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 12.sp),
               ),
-              if(invoice.imagePath != "" && invoice.imagePath.isNotEmpty)
-              Align(
-                alignment: Alignment.centerLeft,
-                child:Image.file(
-        File(invoice.imagePath),
-        width:MediaQuery.of(context).size.width * 0.3,
-      
-        fit: BoxFit.cover,
-      ) ,
+              Text(
+                'Email: ${invoice.client.clientEmail}',
+                style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 12.sp),
               ),
-              const SizedBox(height: 80),
             ],
           ),
+        ),
+        // INVOICE FROM (Business)
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'INVOICE FROM:',
+                style: AppTextStyles.poFont20BlackWh700.copyWith(fontSize: 15.sp),
+              ),
+              SizedBox(height: 2),
+              Text(
+                invoice.businessAccount.name,
+                style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 12.sp),
+              ),
+              Text(
+                invoice.businessAccount.address ?? '',
+                style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 12.sp),
+              ),
+              Text(
+                'Phone: ${invoice.businessAccount.phone ?? ""}',
+                style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 12.sp),
+              ),
+              Text(
+                'Email: ${invoice.businessAccount.email ?? ""}',
+                style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 12.sp),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+    const SizedBox(height: 32),
+
+    // Table Header
+    InvoiceTableRow(
+      backgroundColor: AppColors.extraLightGrey,
+      height: 44,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              "Name",
+              style: AppTextStyles.poFont20BlackWh600.copyWith(fontSize: 10.sp),
+            ),
+          ),
+        ),
+        Text(
+          "QTY",
+          style: AppTextStyles.poFont20BlackWh600.copyWith(fontSize: 10.sp),
+        ),
+        Text(
+          "Price, ${invoice.currency}",
+          style: AppTextStyles.poFont20BlackWh600.copyWith(fontSize: 10.sp),
+        ),
+        Text(
+          "Amount, ${invoice.currency}",
+          style: AppTextStyles.poFont20BlackWh600.copyWith(fontSize: 10.sp),
+        ),
+      ],
+    ),
+
+    // Table Content
+    Column(
+      children: invoice.items.map((item) {
+        final qty = item.quantity ?? 0;
+        final price = item.unitPrice ?? 0.0;
+        final amount = qty * price;
+
+        return InvoiceTableRow(
+          height: 44,
+          showBottomBorder: true,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                item.name ?? '',
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 10.sp),
+              ),
+            ),
+            Text(
+              qty.toString(),
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 10.sp),
+            ),
+            Text(
+              price.toStringAsFixed(2),
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 10.sp),
+            ),
+            Text(
+              amount.toStringAsFixed(2),
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 10.sp),
+            ),
+          ],
+        );
+      }).toList(),
+    ),
+
+    SizedBox(height: 20),
+
+    // Total Row
+    Row(
+      children: [
+        Spacer(),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('Subtotal: ', style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 13.sp)),
+                Text('\$${subtotal.toStringAsFixed(2)}', style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 13.sp)),
+              ],
+            ),
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Text('Discount: ', style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 13.sp)),
+                Text('\$${totalDiscount.toStringAsFixed(2)}', style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 13.sp)),
+              ],
+            ),
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Text('Tax: ', style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 13.sp)),
+                Text('\$${totalTax.toStringAsFixed(2)}', style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 13.sp)),
+              ],
+            ), 
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Text('Total: ', style: AppTextStyles.poFont20BlackWh700.copyWith(fontSize: 13.sp)),
+                Text('\$${total.toStringAsFixed(2)}', style: AppTextStyles.poFont20BlackWh700.copyWith(fontSize: 13.sp)),
+              ],
+            ),
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Text('Amount paid: ', style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 13.sp)),
+                Text('\$${amountPaid.toStringAsFixed(2)}', style: AppTextStyles.poFont20BlackWh400.copyWith(fontSize: 13.sp)),
+              ],
+            ),
+            SizedBox(height: 12),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Balance Due: ', style: AppTextStyles.poFont20BlackWh700.copyWith(fontSize: 13.sp)),
+                Text('\$${balanceDue.toStringAsFixed(2)}', style: AppTextStyles.poFont20BlackWh700.copyWith(fontSize: 13.sp)),
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
+
+  buildImagesRowNormal(context, invoice.businessAccount.imageSignature, invoice.imagePath),
+
+    const SizedBox(height: 80),
+  ],
+)
+
         ),
       ),
     );
   }
+}
+
+
+Widget buildImagesRowNormal(BuildContext context, String? signaturePath, String? invoicePath) {
+  // لو مفيش ولا صورة، ما تعرضش حاجة
+  if ((signaturePath == null || signaturePath.isEmpty) &&
+      (invoicePath == null || invoicePath.isEmpty)) {
+    return SizedBox.shrink();
+  }
+
+  // تحديد الـ MainAxisAlignment حسب وجود الصور
+  MainAxisAlignment getMainAxisAlignment() {
+    if ((signaturePath != null && signaturePath.isNotEmpty) &&
+        (invoicePath != null && invoicePath.isNotEmpty)) {
+      return MainAxisAlignment.spaceBetween;
+    } else if (signaturePath != null && signaturePath.isNotEmpty) {
+      return MainAxisAlignment.end;
+    } else {
+      return MainAxisAlignment.start;
+    }
+  }
+
+  return Container(
+    margin: EdgeInsets.symmetric(vertical: 50),
+    child: Row(
+      mainAxisAlignment: getMainAxisAlignment(),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // صورة الفاتورة (شمال)
+        if (invoicePath != null && invoicePath.isNotEmpty) ...[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Invoice Image:',
+                style: AppTextStyles.poFont20BlackWh700.copyWith(fontSize: 15.sp,
+              ),
+              ),
+              SizedBox(height: 5),
+              Image.file(
+                File(invoicePath),
+                width: MediaQuery.of(context).size.width * 0.3,
+                height: 150,
+                fit: BoxFit.cover,
+              ),
+            ],
+          ),
+        ],
+
+        // التوقيع (يمين)
+        if (signaturePath != null && signaturePath.isNotEmpty) ...[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+            
+              Text(
+                'Signature:',
+                style: AppTextStyles.poFont20BlackWh700.copyWith(fontSize: 15.sp,
+              )),  
+              Text(
+                '_______________',
+                style: TextStyle(fontSize: 12),
+              ),
+              SizedBox(height: 5),
+              Image.file(  
+                File(signaturePath),
+                width: 80,
+                height: 50,
+                fit: BoxFit.contain,
+              ),
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
 }

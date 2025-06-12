@@ -105,7 +105,18 @@ double subtotal =invoice.invoiceSubtotal?? totals.subtotal;
 double totalDiscount = invoice.invoiceDiscount?? totals.totalDiscount;
 double totalTax = invoice.invoiceTax?? totals.totalTax;
 final total = invoice.invoiceTotal?? totals.total;
- 
+   double amountPaid = 0;
+    if (invoice.paymentMethod == null || invoice.paymentMethod!.isEmpty) {
+      amountPaid = invoice.receivedPayment ?? 0.0;
+    } else {
+      amountPaid = total;
+    }
+
+    double balanceDue = total - amountPaid;
+    if (balanceDue < 0) {
+      balanceDue = 0.0;
+    }
+
     
    pdf.addPage(
   pw.Page(
@@ -515,7 +526,7 @@ pw.Expanded(
       pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text('Subtotal:', style: pw.TextStyle(fontSize: 10)),
+          pw.Text('Subtotal: ', style: pw.TextStyle(fontSize: 10)),
           pw.Text('\$${subtotal.toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 10)),
         ],
       ),
@@ -523,7 +534,7 @@ pw.Expanded(
       pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text('Discount:', style: pw.TextStyle(fontSize: 10)),
+          pw.Text('Discount: ', style: pw.TextStyle(fontSize: 10)),
           pw.Text('\$${totalDiscount.toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 10)),
         ],
       ),
@@ -531,7 +542,7 @@ pw.Expanded(
       pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text('Tax:', style: pw.TextStyle(fontSize: 10)),
+          pw.Text('Tax: ', style: pw.TextStyle(fontSize: 10)),
           pw.Text('\$${totalTax.toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 10)),
         ],
       ),
@@ -539,12 +550,28 @@ pw.Expanded(
       pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text('Total', style: pw.TextStyle(fontSize: 13)),
+          pw.Text('Total: ', style: pw.TextStyle(fontSize: 13)),
           pw.Text('\$${total.toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 13)),
         ],
       ),
+      pw.SizedBox(height: 12),
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text('Amount paid: ', style: pw.TextStyle(fontSize: 10)),
+          pw.Text('\$${amountPaid.toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 13)),
+        ],
+      ),
+      pw.SizedBox(height: 12),
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text('Balance Due: ', style: pw.TextStyle(fontSize: 10)),
+          pw.Text('\$${balanceDue.toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 13)),
+        ],
+      ),
     ],
-  ),
+  ),  
 )
 
 
